@@ -105,7 +105,7 @@ logging.debug("")
 # topLabel = tk.Label(frameTop, text="This is the ToP", width=50, height=5).pack()
 clockFrame = DnDFrame(window, bd=bdVar_outer, bg='white')
 clockFrame.pack()
-timeLabel = tk.Label(clockFrame, font=("Courier", 30, 'bold'), bg=green, fg="white", bd =30)
+timeLabel = tk.Label(clockFrame, font=("Courier", 40, 'bold'), bg=green, fg="white", bd =15)
 timeLabel.grid(row =0, column=1)
 # the clock function itself is at the bottom
 # it needs to launch functions that have to be defined first
