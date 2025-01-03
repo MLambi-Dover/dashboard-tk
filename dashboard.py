@@ -35,8 +35,6 @@ rosterPath = "./"
 os.chdir(rosterPath)
 theFiles = [f for f in os.listdir() if os.path.isfile(f)]
 
-
-#
 ### COLORS
 green = '#008800'
 ltgreen = '#abfaa9'
@@ -52,6 +50,30 @@ font4 = ("Courier", "12", "bold") # was ?
 font5 = ("Courier", "18", "bold") # was 18
 
 
+def make_draggable(widget):
+    widget.bind("<Button-1>", on_drag_start)
+    widget.bind("<B1-Motion>", on_drag_motion)
+
+def on_drag_start(event):
+    widget = event.widget
+    widget._drag_start_x = event.x
+    widget._drag_start_y = event.y
+
+def on_drag_motion(event):
+    widget = event.widget
+    x = widget.winfo_x() - widget._drag_start_x + event.x
+    y = widget.winfo_y() - widget._drag_start_y + event.y
+    widget.place(x=x, y=y)
+
+class DragDropMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        make_draggable(self)
+
+class DnDFrame(DragDropMixin, tk.Frame):
+    pass
+
 ### INSTANTIATE WINDOW ###
 window = tk.Tk()
 window.title('Dashboard v1')
@@ -59,6 +81,7 @@ window_width = '1800'
 window_height = '750'
 window.geometry(f'{window_width}x{window_height}')
 # window.attributes('-fullscreen', True)  # makes tkinter full screen; comment out above
+window.configure(bg='darkgrey')
 bdVar_outer = 5
 
 
@@ -70,39 +93,45 @@ menubar.add_cascade(label="File", menu=filemenu)
 filemenu.add_command(label="Exit", command=window.quit)
 
 # The layout uses 3 frames; top, middle, bottom
-frameTop = tk.Frame(window, bg=green2, bd=bdVar_outer, relief='sunken')  # I had width and heights assigned
-frameTop.pack(fill='x'  )
-frameMiddle = tk.Frame(window, bg=green)                      # but they dont do anything
+frameTop = DnDFrame(window, bg=green2, bd=bdVar_outer, relief='sunken')  # I had width and heights assigned
+frameTop.pack()
+frameMiddle = DnDFrame(window, bg=green, bd=bdVar_outer)                      # but they dont do anything
 frameMiddle.pack()
-frameBottom = tk.Frame(window, bg=green2, bd=bdVar_outer, relief='sunken')
-frameBottom.pack(fill = 'both', anchor='s')
+frameBottom = DnDFrame(window, bg=green2, bd=bdVar_outer, relief='sunken')
+frameBottom.pack(anchor='s')
 
 logging.debug("")
+
 # topLabel = tk.Label(frameTop, text="This is the ToP", width=50, height=5).pack()
-timeLabel = tk.Label(frameTop, font=("Courier", 30, 'bold'), bg=green, fg="white", bd =30)
+clockFrame = DnDFrame(window, bd=bdVar_outer, bg='white')
+clockFrame.pack()
+timeLabel = tk.Label(clockFrame, font=("Courier", 30, 'bold'), bg=green, fg="white", bd =30)
 timeLabel.grid(row =0, column=1)
 # the clock function itself is at the bottom
 # it needs to launch functions that have to be defined first
 
 
 # WEATHER LABELS
-weatherLabel = tk.Label(frameTop, text="the weather", bd=15, font=font3)
-weatherLabel.grid(row=0, column=2)
+weatherFrame = DnDFrame(window, bd=bdVar_outer, bg='darkgreen')
+weatherFrame.pack()
 
-weatherIconLabel = tk.Label(frameTop, image="")
-weatherIconLabel.grid(row=0, column=3)
+weatherLabel = tk.Label(weatherFrame, text="the weather", bd=15, font=font3)
+weatherLabel.grid(row=0, column=0)
 
-weatherTempLabel = tk.Label(frameTop, text='temp', bd=15, font=font3)
-weatherTempLabel.grid(row=0, column=4)
+weatherIconLabel = tk.Label(weatherFrame, image="")
+weatherIconLabel.grid(row=0, column=1)
 
-weatherWindSpeedLabel = tk.Label(frameTop, text='wind speed', bd=15, font=font4)
-weatherWindSpeedLabel.grid(row=0, column=5)
+weatherTempLabel = tk.Label(weatherFrame, text='temp', bd=15, font=font3)
+weatherTempLabel.grid(row=0, column=2)
 
-weatherWindGustLabel = tk.Label(frameTop, text='wind gust', bd=15, font=font4)
-weatherWindGustLabel.grid(row=0, column=6)
+weatherWindSpeedLabel = tk.Label(weatherFrame, text='wind speed', bd=15, font=font4)
+weatherWindSpeedLabel.grid(row=1, column=0)
 
-weatherFeelsLikeLabel = tk.Label(frameTop, text='feels like', bd=15, font=font5)
-weatherFeelsLikeLabel.grid(row=0, column=7)
+weatherWindGustLabel = tk.Label(weatherFrame, text='wind gust', bd=15, font=font4)
+weatherWindGustLabel.grid(row=1, column=1)
+
+weatherFeelsLikeLabel = tk.Label(weatherFrame, text='feels like', bd=15, font=font5)
+weatherFeelsLikeLabel.grid(row=1, column=2)
 
 
 # FRAME MIDDLE
@@ -145,8 +174,8 @@ class workstation:
 # print(testFrame.hostname, testFrame.row, testFrame.column)
 
 # Roster Frame
-frameMiddle_roster = tk.Frame(frameMiddle, width=50, bd=5, relief='groove')
-frameMiddle_roster.grid(row=0, column=10, rowspan=4, sticky='NS')
+frameMiddle_roster = DnDFrame(window, width=50, bd=5, relief='groove', bg='darkgreen')
+frameMiddle_roster.pack()
 # begin forming the drop down menuSelection by creating a StringVar that will hold the selection
 menuSelection = tk.StringVar()
 menuSelection.set("Select A Class")
@@ -159,7 +188,7 @@ submitButton = tk.Button(frameMiddle_roster, text='Submit', command= lambda:getS
 submitButton.pack()
 # TextBox Configuration
 # inherits height and width; has scrollbars
-textBox = tk.Text(frameMiddle_roster, width=200)
+textBox = tk.Text(frameMiddle_roster, width=25, height=25)
 S = tk.Scrollbar(frameMiddle_roster)
 S.pack(side=tk.RIGHT, fill=tk.Y)
 textBox.pack(side=tk.LEFT, fill=tk.Y)
